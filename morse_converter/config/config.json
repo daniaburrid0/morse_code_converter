@@ -1,0 +1,15 @@
+{
+  "audio": {
+    "frequency": 800,
+    "wpm": 20,
+    "volume": 0.5
+  },
+  "practice": {
+    "difficulty_levels": ["beginner", "intermediate", "advanced"],
+    "exercises_per_level": 10
+  },
+  "system": {
+    "log_level": "INFO",
+    "max_log_size": "10MB"
+  }
+}
