@@ -1,0 +1,4 @@
+
+*.pyc
+*.pyc
+/morse_converter/tests/__pycache__
