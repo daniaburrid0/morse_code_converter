@@ -1,5 +1,9 @@
 import re
 from typing import Pattern
+from morse_converter.utils import setup_logger
+
+# Configurar logger para este módulo
+logger = setup_logger(__name__)
 
 class ValidationError(Exception):
     """Custom exception for validation errors."""
@@ -19,12 +23,11 @@ class InputValidator:
 
     # Patrones de validación
     VALID_TEXT_PATTERN: Pattern = re.compile(r'^[A-Za-z0-9\s.,?!@]+$')
-    # Corregimos el patrón Morse agregando los caracteres entre corchetes
     VALID_MORSE_PATTERN: Pattern = re.compile(r'^[.\- \s]+$')
     
     # Constantes de configuración
-    MAX_INPUT_LENGTH: int = 1000  # Límite razonable para el input
-    MAX_CONSECUTIVE_SPACES: int = 1  # Máximo de espacios consecutivos permitidos
+    MAX_INPUT_LENGTH: int = 1000
+    MAX_CONSECUTIVE_SPACES: int = 1
 
     def validate_text_input(self, text: str) -> bool:
         """
@@ -40,22 +43,37 @@ class InputValidator:
             ValidationError: If the input text is invalid.
             TypeError: If input is not a string.
         """
-        if not isinstance(text, str):
-            raise TypeError("Input must be a string")
+        logger.info(f"Validating text input: {text}")
+        try:
+            if not isinstance(text, str):
+                logger.error("Invalid input type: not a string")
+                raise TypeError("Input must be a string")
 
-        if not text:
-            raise ValidationError("Input text cannot be empty")
+            if not text:
+                logger.error("Empty input text")
+                raise ValidationError("Input text cannot be empty")
 
-        if len(text) > self.MAX_INPUT_LENGTH:
-            raise ValidationError(f"Input text exceeds maximum length of {self.MAX_INPUT_LENGTH} characters")
+            if len(text) > self.MAX_INPUT_LENGTH:
+                logger.error(f"Input length {len(text)} exceeds maximum {self.MAX_INPUT_LENGTH}")
+                raise ValidationError(f"Input text exceeds maximum length of {self.MAX_INPUT_LENGTH} characters")
 
-        if not self.VALID_TEXT_PATTERN.match(text):
-            raise ValidationError("Input contains invalid characters")
+            if not self.VALID_TEXT_PATTERN.match(text):
+                logger.error("Input contains invalid characters")
+                raise ValidationError("Input contains invalid characters")
 
-        if '  ' in text:  # Verificar espacios consecutivos
-            raise ValidationError("Multiple consecutive spaces are not allowed")
+            if '  ' in text:
+                logger.error("Multiple consecutive spaces detected")
+                raise ValidationError("Multiple consecutive spaces are not allowed")
 
-        return True
+            logger.debug("Text input validation successful")
+            return True
+
+        except (TypeError, ValidationError) as e:
+            logger.error(f"Validation failed: {str(e)}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error during text validation: {str(e)}")
+            raise ValidationError(f"Validation failed: {str(e)}")
 
     def validate_morse_input(self, morse: str) -> bool:
         """
@@ -71,24 +89,42 @@ class InputValidator:
             ValidationError: If the input Morse code is invalid.
             TypeError: If input is not a string.
         """
-        if not isinstance(morse, str):
-            raise TypeError("Input must be a string")
+        logger.info(f"Validating Morse input: {morse}")
+        try:
+            if not isinstance(morse, str):
+                logger.error("Invalid input type: not a string")
+                raise TypeError("Input must be a string")
 
-        if not morse:
-            raise ValidationError("Input Morse code cannot be empty")
+            if not morse:
+                logger.error("Empty Morse input")
+                raise ValidationError("Input Morse code cannot be empty")
 
-        if len(morse) > self.MAX_INPUT_LENGTH:
-            raise ValidationError(f"Input Morse code exceeds maximum length of {self.MAX_INPUT_LENGTH} characters")
+            if len(morse) > self.MAX_INPUT_LENGTH:
+                logger.error(f"Input length {len(morse)} exceeds maximum {self.MAX_INPUT_LENGTH}")
+                raise ValidationError(f"Input Morse code exceeds maximum length of {self.MAX_INPUT_LENGTH} characters")
 
-        if not self.VALID_MORSE_PATTERN.match(morse):
-            raise ValidationError("Input contains invalid Morse code characters")
+            if not self.VALID_MORSE_PATTERN.match(morse):
+                logger.error("Input contains invalid Morse characters")
+                raise ValidationError("Input contains invalid Morse code characters")
 
-        # Validar formato de código Morse
-        morse_symbols = morse.split()
-        for symbol in morse_symbols:
-            if not symbol:  # Espacios múltiples
-                raise ValidationError("Invalid Morse code format: multiple consecutive spaces")
-            if len(symbol) > 7:  # Longitud máxima razonable para un símbolo Morse
-                raise ValidationError(f"Invalid Morse code symbol length: {symbol}")
+            # Validar formato de código Morse
+            morse_symbols = morse.split()
+            logger.debug(f"Validating Morse symbols: {morse_symbols}")
+            
+            for symbol in morse_symbols:
+                if not symbol:
+                    logger.error("Multiple consecutive spaces detected")
+                    raise ValidationError("Invalid Morse code format: multiple consecutive spaces")
+                if len(symbol) > 7:
+                    logger.error(f"Invalid symbol length: {symbol}")
+                    raise ValidationError(f"Invalid Morse code symbol length: {symbol}")
 
-        return True
+            logger.debug("Morse input validation successful")
+            return True
+
+        except (TypeError, ValidationError) as e:
+            logger.error(f"Validation failed: {str(e)}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error during Morse validation: {str(e)}")
+            raise ValidationError(f"Validation failed: {str(e)}")

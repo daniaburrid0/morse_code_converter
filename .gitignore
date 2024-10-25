@@ -2,3 +2,7 @@
 *.pyc
 *.pyc
 /morse_converter/tests/__pycache__
+*.pyc
+*.pyc
+/morse_converter/core/__pycache__
+/morse_converter/core/__pycache__

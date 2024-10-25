@@ -1,3 +1,8 @@
+from morse_converter.utils import setup_logger
+
+# Configurar logger para este módulo
+logger = setup_logger(__name__)
+
 class MorseConverter:
     """
     Main conversion engine for text-to-Morse and Morse-to-text operations.
@@ -44,41 +49,56 @@ class MorseConverter:
             TypeError: If input is not a string
             ValueError: If the input text contains unsupported characters.
         """
-        if not isinstance(text, str):
-            raise TypeError("Input must be a string")
+        logger.info(f"Converting text to Morse: {text}")
+        try:
+            if not isinstance(text, str):
+                logger.error("Invalid input type: not a string")
+                raise TypeError("Input must be a string")
+                
+            if not text:
+                logger.debug("Empty input text, returning empty string")
+                return ""
             
-        if not text:
-            return ""
-        
-        text = text.upper()
-        words = []
-        current_word = []
-        
-        for i, char in enumerate(text):
-            if char == ' ':
-                if current_word:
-                    words.append(' '.join(current_word))
-                    current_word = []
-            else:
-                if char not in self.MORSE_CODE_DICT:
-                    raise ValueError(f"Character '{char}' is not supported in Morse code")
-                
-                morse_char = self.MORSE_CODE_DICT[char]
-                
-                # Manejar puntuación
-                if self._is_punctuation(char):
+            text = text.upper()
+            logger.debug(f"Normalized text: {text}")
+            words = []
+            current_word = []
+            
+            for i, char in enumerate(text):
+                logger.debug(f"Processing character: {char}")
+                if char == ' ':
                     if current_word:
                         words.append(' '.join(current_word))
                         current_word = []
-                    words.append(morse_char)
                 else:
-                    current_word.append(morse_char)
-        
-        # Agregar la última palabra si existe
-        if current_word:
-            words.append(' '.join(current_word))
-        
-        return '  '.join(words)
+                    if char not in self.MORSE_CODE_DICT:
+                        error_msg = f"Character '{char}' is not supported in Morse code"
+                        logger.error(error_msg)
+                        raise ValueError(error_msg)
+                    
+                    morse_char = self.MORSE_CODE_DICT[char]
+                    logger.debug(f"Converted '{char}' to '{morse_char}'")
+                    
+                    # Manejar puntuación
+                    if self._is_punctuation(char):
+                        if current_word:
+                            words.append(' '.join(current_word))
+                            current_word = []
+                        words.append(morse_char)
+                    else:
+                        current_word.append(morse_char)
+            
+            # Agregar la última palabra si existe
+            if current_word:
+                words.append(' '.join(current_word))
+            
+            result = '  '.join(words)
+            logger.info(f"Conversion completed successfully: {result}")
+            return result
+
+        except Exception as e:
+            logger.error(f"Text to Morse conversion failed: {str(e)}")
+            raise
 
     def morse_to_text(self, morse: str) -> str:
         """
@@ -94,35 +114,53 @@ class MorseConverter:
             TypeError: If input is not a string
             ValueError: If the input Morse code is invalid.
         """
-        if not isinstance(morse, str):
-            raise TypeError("Input must be a string")
-            
-        if not morse:
-            return ""
-        
-        # Validate Morse characters
-        invalid_chars = set(morse) - {'.', '-', ' '}
-        if invalid_chars:
-            raise ValueError(f"Invalid Morse code characters: {invalid_chars}")
-        
-        words = morse.split('  ')
-        result = []
-        
-        for word in words:
-            chars = word.split()
-            text_chars = []
-            
-            for i, char in enumerate(chars):
-                if char not in self.MORSE_TO_TEXT:
-                    raise ValueError(f"Invalid Morse code sequence: '{char}'")
-                text_char = self.MORSE_TO_TEXT[char]
+        logger.info(f"Converting Morse to text: {morse}")
+        try:
+            if not isinstance(morse, str):
+                logger.error("Invalid input type: not a string")
+                raise TypeError("Input must be a string")
                 
-                # Si es puntuación y no es el primer carácter, no agregar espacio
-                if self._is_punctuation(text_char) and text_chars:
-                    text_chars[-1] = text_chars[-1] + text_char
-                else:
-                    text_chars.append(text_char)
+            if not morse:
+                logger.debug("Empty input Morse code, returning empty string")
+                return ""
             
-            result.append(''.join(text_chars))
-        
-        return ' '.join(result)
+            # Validate Morse characters
+            invalid_chars = set(morse) - {'.', '-', ' '}
+            if invalid_chars:
+                error_msg = f"Invalid Morse code characters: {invalid_chars}"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
+            
+            words = morse.split('  ')
+            logger.debug(f"Split into words: {words}")
+            result = []
+            
+            for word in words:
+                chars = word.split()
+                logger.debug(f"Processing word characters: {chars}")
+                text_chars = []
+                
+                for i, char in enumerate(chars):
+                    if char not in self.MORSE_TO_TEXT:
+                        error_msg = f"Invalid Morse code sequence: '{char}'"
+                        logger.error(error_msg)
+                        raise ValueError(error_msg)
+                    
+                    text_char = self.MORSE_TO_TEXT[char]
+                    logger.debug(f"Converted '{char}' to '{text_char}'")
+                    
+                    # Si es puntuación y no es el primer carácter, no agregar espacio
+                    if self._is_punctuation(text_char) and text_chars:
+                        text_chars[-1] = text_chars[-1] + text_char
+                    else:
+                        text_chars.append(text_char)
+                
+                result.append(''.join(text_chars))
+            
+            final_result = ' '.join(result)
+            logger.info(f"Conversion completed successfully: {final_result}")
+            return final_result
+
+        except Exception as e:
+            logger.error(f"Morse to text conversion failed: {str(e)}")
+            raise

@@ -2,6 +2,10 @@ import numpy as np
 import sounddevice as sd
 from typing import Optional, List
 from dataclasses import dataclass
+from morse_converter.utils import setup_logger
+
+# Configurar logger para este módulo
+logger = setup_logger(__name__)
 
 @dataclass
 class MorseTimings:
@@ -33,18 +37,22 @@ class AudioGenerator:
             frequency (float): Frequency of the tone in Hz
             sample_rate (int): Sample rate for audio generation
         """
+        logger.debug(f"Initializing AudioGenerator with frequency={frequency}Hz, sample_rate={sample_rate}Hz")
         self.frequency = frequency
         self.sample_rate = sample_rate
         self.timings = MorseTimings()
         self._audio_buffer: Optional[np.ndarray] = None
+        logger.debug("AudioGenerator initialized successfully")
 
     def _generate_tone(self, duration: float) -> np.ndarray:
         """Generate a sine wave tone."""
+        logger.debug(f"Generating tone with duration={duration}s")
         t = np.linspace(0, duration, int(self.sample_rate * duration), False)
         return np.sin(2 * np.pi * self.frequency * t)
 
     def _generate_silence(self, duration: float) -> np.ndarray:
         """Generate a period of silence."""
+        logger.debug(f"Generating silence with duration={duration}s")
         return np.zeros(int(self.sample_rate * duration))
 
     def generate_audio(self, morse: str) -> None:
@@ -57,28 +65,40 @@ class AudioGenerator:
         Raises:
             AudioError: If audio generation fails.
         """
+        logger.info(f"Generating audio for Morse code: {morse}")
         try:
             audio_segments: List[np.ndarray] = []
             
             for symbol in morse:
                 if symbol == '.':
+                    logger.debug("Generating dot tone")
                     audio_segments.append(self._generate_tone(self.timings.DOT_DURATION))
                     audio_segments.append(self._generate_silence(self.timings.SYMBOL_SPACE))
                 elif symbol == '-':
+                    logger.debug("Generating dash tone")
                     audio_segments.append(self._generate_tone(self.timings.DASH_DURATION))
                     audio_segments.append(self._generate_silence(self.timings.SYMBOL_SPACE))
                 elif symbol == ' ':
+                    logger.debug("Generating word space")
                     audio_segments.append(self._generate_silence(self.timings.WORD_SPACE))
+                else:
+                    logger.warning(f"Ignoring invalid symbol: {symbol}")
 
             self._audio_buffer = np.concatenate(audio_segments)
+            logger.info("Audio generation completed successfully")
+            
         except Exception as e:
+            logger.error(f"Failed to generate audio: {str(e)}")
             raise AudioError(f"Failed to generate audio: {str(e)}")
 
     def set_frequency(self, frequency: float) -> None:
         """Set the tone frequency."""
+        logger.info(f"Setting frequency to {frequency}Hz")
         if frequency <= 0:
+            logger.error(f"Invalid frequency value: {frequency}")
             raise ValueError("Frequency must be positive")
         self.frequency = frequency
+        logger.debug("Frequency updated successfully")
 
     def set_timing(self, 
                   dot_duration: Optional[float] = None,
@@ -96,16 +116,23 @@ class AudioGenerator:
             letter_space (float): Space between letters
             word_space (float): Space between words
         """
+        logger.info("Updating timing configurations")
         if dot_duration is not None:
+            logger.debug(f"Setting dot duration to {dot_duration}s")
             self.timings.DOT_DURATION = dot_duration
         if dash_duration is not None:
+            logger.debug(f"Setting dash duration to {dash_duration}s")
             self.timings.DASH_DURATION = dash_duration
         if symbol_space is not None:
+            logger.debug(f"Setting symbol space to {symbol_space}s")
             self.timings.SYMBOL_SPACE = symbol_space
         if letter_space is not None:
+            logger.debug(f"Setting letter space to {letter_space}s")
             self.timings.LETTER_SPACE = letter_space
         if word_space is not None:
+            logger.debug(f"Setting word space to {word_space}s")
             self.timings.WORD_SPACE = word_space
+        logger.info("Timing configurations updated successfully")
 
 class AudioPlayer:
     """
@@ -125,8 +152,10 @@ class AudioPlayer:
         Parameters:
             generator (AudioGenerator): The audio generator instance to use for playback
         """
+        logger.debug("Initializing AudioPlayer")
         self.generator = generator
         self._is_playing = False
+        logger.debug("AudioPlayer initialized successfully")
 
     def play_audio(self) -> None:
         """
@@ -137,24 +166,32 @@ class AudioPlayer:
         """
         try:
             if self.generator._audio_buffer is None:
+                logger.error("Attempted to play audio without generating it first")
                 raise AudioError("No audio has been generated yet")
 
             if self._is_playing:
+                logger.warning("Attempted to play audio while already playing")
                 raise AudioError("Audio is already playing")
 
+            logger.info("Starting audio playback")
             self._is_playing = True
             sd.play(self.generator._audio_buffer, self.generator.sample_rate)
             sd.wait()  # Espera hasta que termine la reproducción
             self._is_playing = False
+            logger.info("Audio playback completed successfully")
 
         except Exception as e:
             self._is_playing = False
+            logger.error(f"Audio playback failed: {str(e)}")
             raise AudioError(f"Failed to play audio: {str(e)}")
 
     def stop_audio(self) -> None:
         """Stops the current audio playback."""
         try:
+            logger.info("Stopping audio playback")
             sd.stop()
             self._is_playing = False
+            logger.info("Audio playback stopped successfully")
         except Exception as e:
+            logger.error(f"Failed to stop audio: {str(e)}")
             raise AudioError(f"Failed to stop audio: {str(e)}")
