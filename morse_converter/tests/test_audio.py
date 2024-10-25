@@ -143,3 +143,61 @@ class TestAudioPlayer:
         
         with pytest.raises(AudioError, match="Failed to stop audio"):
             player.stop_audio()
+
+@pytest.mark.manual  # Marcar como test manual
+class TestAudioManual:
+    """Test suite for manual audio testing (actual sound output)."""
+
+    @pytest.fixture
+    def real_generator(self):
+        """Fixture that provides a real AudioGenerator instance."""
+        return AudioGenerator(frequency=800)
+
+    @pytest.fixture
+    def real_player(self, real_generator):
+        """Fixture that provides a real AudioPlayer instance."""
+        return AudioPlayer(real_generator)
+
+    def test_play_sos(self, real_generator, real_player):
+        """Test playing SOS in Morse code."""
+        morse_sos = "... --- ..."  # SOS en código Morse
+        real_generator.generate_audio(morse_sos)
+        real_player.play_audio()
+
+    def test_play_hello(self, real_generator, real_player):
+        """Test playing 'HELLO' in Morse code."""
+        morse_hello = ".... . .-.. .-.. ---"  # HELLO en código Morse
+        real_generator.generate_audio(morse_hello)
+        real_player.play_audio()
+
+    def test_custom_frequency(self, real_generator, real_player):
+        """Test playing with different frequencies."""
+        morse_a = ".-"  # Letra A
+        
+        # Probar diferentes frecuencias
+        frequencies = [440, 880, 1000]  # Diferentes frecuencias en Hz
+        
+        for freq in frequencies:
+            real_generator.set_frequency(freq)
+            real_generator.generate_audio(morse_a)
+            real_player.play_audio()
+            # Pausa entre sonidos
+            import time
+            time.sleep(1)
+
+    def test_custom_timing(self, real_generator, real_player):
+        """Test playing with different timing settings."""
+        morse_hi = ".... .."  # HI en código Morse
+        
+        # Configuración normal
+        real_generator.generate_audio(morse_hi)
+        real_player.play_audio()
+        
+        # Configuración más lenta
+        real_generator.set_timing(
+            dot_duration=0.2,
+            dash_duration=0.6,
+            symbol_space=0.2
+        )
+        real_generator.generate_audio(morse_hi)
+        real_player.play_audio()
