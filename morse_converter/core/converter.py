@@ -26,6 +26,10 @@ class MorseConverter:
     # Crear diccionario inverso para la conversión de Morse a texto
     MORSE_TO_TEXT = {value: key for key, value in MORSE_CODE_DICT.items()}
 
+    def _is_punctuation(self, char: str) -> bool:
+        """Helper method to check if a character is punctuation."""
+        return char in '.!?@,'
+
     def text_to_morse(self, text: str) -> str:
         """
         Converts plain text to Morse code.
@@ -46,15 +50,35 @@ class MorseConverter:
         if not text:
             return ""
         
-        text = ' '.join(text.split())  # Normalize spaces
         text = text.upper()
+        words = []
+        current_word = []
         
-        def convert_char(char: str) -> str:
-            if char not in self.MORSE_CODE_DICT:
-                raise ValueError(f"Character '{char}' is not supported in Morse code")
-            return self.MORSE_CODE_DICT[char]
+        for i, char in enumerate(text):
+            if char == ' ':
+                if current_word:
+                    words.append(' '.join(current_word))
+                    current_word = []
+            else:
+                if char not in self.MORSE_CODE_DICT:
+                    raise ValueError(f"Character '{char}' is not supported in Morse code")
+                
+                morse_char = self.MORSE_CODE_DICT[char]
+                
+                # Manejar puntuación
+                if self._is_punctuation(char):
+                    if current_word:
+                        words.append(' '.join(current_word))
+                        current_word = []
+                    words.append(morse_char)
+                else:
+                    current_word.append(morse_char)
         
-        return ' '.join(convert_char(char) for char in text)
+        # Agregar la última palabra si existe
+        if current_word:
+            words.append(' '.join(current_word))
+        
+        return '  '.join(words)
 
     def morse_to_text(self, morse: str) -> str:
         """
@@ -81,13 +105,24 @@ class MorseConverter:
         if invalid_chars:
             raise ValueError(f"Invalid Morse code characters: {invalid_chars}")
         
-        # Handle multiple spaces and split
-        morse_chars = [char for char in morse.split(' ') if char]
-        
+        words = morse.split('  ')
         result = []
-        for char in morse_chars:
-            if char not in self.MORSE_TO_TEXT:
-                raise ValueError(f"Invalid Morse code sequence: '{char}'")
-            result.append(self.MORSE_TO_TEXT[char])
         
-        return ''.join(result)
+        for word in words:
+            chars = word.split()
+            text_chars = []
+            
+            for i, char in enumerate(chars):
+                if char not in self.MORSE_TO_TEXT:
+                    raise ValueError(f"Invalid Morse code sequence: '{char}'")
+                text_char = self.MORSE_TO_TEXT[char]
+                
+                # Si es puntuación y no es el primer carácter, no agregar espacio
+                if self._is_punctuation(text_char) and text_chars:
+                    text_chars[-1] = text_chars[-1] + text_char
+                else:
+                    text_chars.append(text_char)
+            
+            result.append(''.join(text_chars))
+        
+        return ' '.join(result)
