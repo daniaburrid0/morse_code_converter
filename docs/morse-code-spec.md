@@ -1,7 +1,7 @@
 # Morse Code Converter Technical Specification
 
 ## Overview
-The Morse Code Converter is a Python application that enables users to convert text to Morse code and vice versa, with additional features for audio output and practice exercises. The application follows a mixed paradigm combining object-oriented and functional programming approaches.
+The Morse Code Converter is a Python application that enables users to convert text to Morse code and vice versa, with additional features for audio output. The application follows a mixed paradigm combining object-oriented and functional programming approaches.
 
 ## Architecture
 
@@ -24,10 +24,6 @@ morse_converter/
 │   ├── __init__.py
 │   ├── file_handler.py
 │   └── logger.py
-├── practice/
-│   ├── __init__.py
-│   ├── exercises.py
-│   └── progress.py
 ├── tests/
 │   ├── __init__.py
 │   ├── test_converter.py
@@ -99,24 +95,6 @@ Comprehensive logging system.
 - Multiple log levels
 - Rotating file logs
 - Structured logging format
-
-## Practice System
-
-### 1. Exercises Module (`practice/exercises.py`)
-Implements practice functionality for learning Morse code.
-
-**Features:**
-- Progressive difficulty levels
-- Random exercise generation
-- Real-time feedback
-
-### 2. Progress Tracking (`practice/progress.py`)
-Monitors and records user progress.
-
-**Features:**
-- Progress statistics
-- Performance metrics
-- Achievement system
 
 ## Technical Requirements
 
