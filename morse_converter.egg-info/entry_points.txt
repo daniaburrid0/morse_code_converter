@@ -1,0 +1,2 @@
+[console_scripts]
+morse-converter = morse_converter.__main__:main

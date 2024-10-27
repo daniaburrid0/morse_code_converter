@@ -169,18 +169,52 @@ def main():
     2. Configura el manejo de señales
     3. Ejecuta la interfaz CLI
     4. Maneja la limpieza al salir
+    
+    Returns:
+        int: Código de salida (0 para éxito, 1 para error)
     """
+    exit_code = 0
+    
     try:
-        # TODO: Inicializar componentes
-        # TODO: Configurar señales
-        # TODO: Ejecutar CLI
-        pass
+        # Inicializar componentes
+        initialize_components()
+        logger.info("Application initialized successfully")
+        
+        # Ejecutar la interfaz CLI
+        logger.debug("Starting CLI interface")
+        app()
+        
+    except KeyboardInterrupt:
+        logger.info("Application terminated by user")
+        console.print("\n[yellow]Application terminated by user[/yellow]")
+        exit_code = 0
+        
+    except FileNotFoundError as e:
+        logger.error(f"Configuration error: {e}")
+        console.print(f"\n[red]Configuration error: {e}[/red]")
+        exit_code = 1
+        
     except Exception as e:
-        # TODO: Manejar errores globales
-        pass
+        logger.error(f"Unexpected error: {e}")
+        console.print(f"\n[red]Unexpected error: {e}[/red]")
+        exit_code = 1
+        
     finally:
-        # TODO: Realizar limpieza
-        pass
+        try:
+            cleanup()
+        except Exception as e:
+            logger.error(f"Error during cleanup: {e}")
+            console.print(f"[red]Error during cleanup: {e}[/red]")
+            exit_code = 1
+        
+        if exit_code == 0:
+            logger.info("Application terminated successfully")
+            console.print("[green]Application terminated successfully[/green]")
+        else:
+            logger.info("Application terminated with errors")
+            console.print("[red]Application terminated with errors[/red]")
+        
+        return exit_code
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

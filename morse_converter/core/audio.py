@@ -29,20 +29,19 @@ class AudioGenerator:
             Generates audio for the given Morse code.
     """
 
-    def __init__(self, frequency: float = 800, sample_rate: int = 44100):
+    def __init__(self, frequency: int = 800, volume: float = 0.5):
         """
         Initialize the AudioGenerator.
 
         Parameters:
-            frequency (float): Frequency of the tone in Hz
-            sample_rate (int): Sample rate for audio generation
+            frequency (int): The frequency in Hz for the tones (default: 800)
+            volume (float): The volume level from 0.0 to 1.0 (default: 0.5)
         """
-        logger.debug(f"Initializing AudioGenerator with frequency={frequency}Hz, sample_rate={sample_rate}Hz")
         self.frequency = frequency
-        self.sample_rate = sample_rate
+        self.volume = volume
+        self.sample_rate = 44100
         self.timings = MorseTimings()
-        self._audio_buffer: Optional[np.ndarray] = None
-        logger.debug("AudioGenerator initialized successfully")
+        self._audio_buffer = None
 
     def _generate_tone(self, duration: float) -> np.ndarray:
         """Generate a sine wave tone."""
